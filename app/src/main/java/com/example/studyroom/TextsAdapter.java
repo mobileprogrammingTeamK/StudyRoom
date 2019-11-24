@@ -87,7 +87,7 @@ public class TextsAdapter extends ArrayAdapter<Texts> {
                     createBtn.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            //database testss
+                            //database testss sdsadsadsa
                         }
                     });
                     Button cancelBtn = dialog.findViewById(R.id.cancelBtn);
