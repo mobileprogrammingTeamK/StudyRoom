@@ -27,7 +27,8 @@ import java.util.List;
 
 public class TextsAdapter extends ArrayAdapter<Texts> {
     private Context mContext;
-    private ArrayList<Texts> threadList = new ArrayList<>();
+    private ArrayList<Texts> threadList = null;
+    private List<Texts> arrayList;
 
 
 
@@ -35,6 +36,8 @@ public class TextsAdapter extends ArrayAdapter<Texts> {
         super(context,0,list);
         mContext = context;
         this.threadList = list;
+        this.arrayList = new ArrayList<>();
+        this.arrayList.addAll(threadList);
     }
 
     @Override
@@ -130,15 +133,15 @@ public class TextsAdapter extends ArrayAdapter<Texts> {
 
     public void filter(String searchText){
         searchText = searchText.toLowerCase();
-        threadList = MainBoard.textsList;
+        threadList.clear();
         MainBoard.textsList.clear();
         if(searchText.length() == 0){
-            MainBoard.textsList.addAll(this.threadList);
+            threadList.addAll(arrayList);
         }else {
             try {
-            for(Texts posts : threadList){
+            for(Texts posts : arrayList){
                 if(posts.getThreadTitle().toLowerCase().contains(searchText) || posts.getThreadText().toLowerCase().contains(searchText)){
-                    MainBoard.textsList.add(posts);
+                    threadList.add(posts);
                 }
             }}catch (Exception e){}
         }
