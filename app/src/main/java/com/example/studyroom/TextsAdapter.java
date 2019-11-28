@@ -128,12 +128,6 @@ public class TextsAdapter extends ArrayAdapter<Texts> {
         return listItem;
     }
 
-    @NonNull
-    @Override
-    public Filter getFilter() {
-        return super.getFilter();
-    }
-
     public void filter(String searchText){
         searchText = searchText.toLowerCase();
         threadList = MainBoard.textsList;
