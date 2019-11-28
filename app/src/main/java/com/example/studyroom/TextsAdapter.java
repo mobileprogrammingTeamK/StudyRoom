@@ -87,6 +87,7 @@ public class TextsAdapter extends ArrayAdapter<Texts> {
                     final AlertDialog alertDialog = builder.show();
                     Button createBtn = dialog.findViewById(R.id.createBtn);
                     createBtn.setVisibility(View.VISIBLE);
+                    createBtn.setText("Edit");
                     createBtn.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
