@@ -1,29 +1,35 @@
 package com.example.studyroom;
 
 
+import com.google.firebase.auth.FirebaseUser;
+
 public class Texts {
-    private String threadTitle;
-    private String threadText;
-    private int userId;
+    private String postTitle;
+    private String postText;
+    private String userId;
 
-    public Texts(String threadTitle,String threadText, int userId) {
-        this.threadText = threadText;
-        this.threadTitle= threadTitle;
+    public Texts(){
+
+    }
+    public Texts(String postTitle,String postText, String userId) {
         this.userId = userId;
+        this.postTitle= postTitle;
+        this.postText = postText;
 
     }
-    public String getThreadTitle(){
-        return threadTitle;
+    public String getPostTitle(){
+        return postTitle;
     }
-    public String getThreadText(){
-        return threadText;
+    public String getPostText(){
+        return postText;
     }
-    public int getUserId(){return userId;}
+    public String getUserId(){return userId;}
+
     public void setThreadTitle(String threadTitle){
-        this.threadTitle = threadTitle;
+        this.postTitle = threadTitle;
     }
     public void setThreadText(String threadText){
-        this.threadText = threadText;
+        this.postText = threadText;
     }
-    public void setUserId(int userId){ this.userId = userId; }
+    public void setUserId(String userId){ this.userId = userId; }
 }

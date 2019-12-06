@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1064161192558",
+    "firebase_url": "https://studyroom-2529a.firebaseio.com",
+    "project_id": "studyroom-2529a",
+    "storage_bucket": "studyroom-2529a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1064161192558:android:2ca3676d8136333ffe947f",
+        "android_client_info": {
+          "package_name": "com.example.studyroom"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1064161192558-me3794egunlbufgta584seqn197jel1c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.studyroom",
+            "certificate_hash": "d1dbd83bc8a510dda3cfff9f151723174482ab86"
+          }
+        },
+        {
+          "client_id": "1064161192558-nambbfk481420fv9br8s0rbgcqdci57v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcX87TPtjGgbQesDFjXKTiRdtP91f9r_w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1064161192558-nambbfk481420fv9br8s0rbgcqdci57v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
