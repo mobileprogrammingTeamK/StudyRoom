@@ -31,6 +31,7 @@ import com.firebase.ui.common.ChangeEventType;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.ObservableSnapshotArray;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -51,24 +52,25 @@ import java.util.List;
 
 
 
-public class TextsAdapter extends FirebaseRecyclerAdapter<Texts, ViewHolder> implements Filterable {
+public class TextsAdapter extends FirebaseRecyclerAdapter<Texts, ViewHolder> {
     private Context mContext;
     private ArrayList<Texts> threadList;
     private List<Texts> arrayList;
     private String currentUser = FirebaseAuth.getInstance().getCurrentUser().getUid();
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
     private DatabaseReference mFirebaseDatabase = database.getReference("posts");
+    FirebaseRecyclerOptions<Texts> options;
 
     FirebaseAuth auth = FirebaseAuth.getInstance();
     EditText txtTitle,txtText;
-    CustomFilter mCustomFilter;
     List<Texts> list,backupList;
-    private final ObservableSnapshotArray<Texts> mSnapshots;
+    private ObservableSnapshotArray<Texts> mSnapshots;
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.listview_activity,parent,false);
+        mContext = parent.getContext();
         return new ViewHolder(view);
     }
 
@@ -86,12 +88,10 @@ public class TextsAdapter extends FirebaseRecyclerAdapter<Texts, ViewHolder> imp
 
     public TextsAdapter(@NonNull FirebaseRecyclerOptions<Texts> options) {
         super(options);
+        this.options = options;
         mSnapshots = options.getSnapshots();
-        list = new ArrayList<>();
         backupList = new ArrayList<>();
-        if (options.getOwner() != null) {
-            options.getOwner().getLifecycle().addObserver(this);
-        }
+
     }
 
     @Override
@@ -101,163 +101,117 @@ public class TextsAdapter extends FirebaseRecyclerAdapter<Texts, ViewHolder> imp
 
     @Override
     protected void onBindViewHolder(@NonNull final ViewHolder holder, int position, @NonNull final Texts model) {
-    }
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    public void startListening() {
-        if (!mSnapshots.isListening(this)) {
-            mSnapshots.addChangeEventListener(this);
+        holder.setPostTitle(model.getPostTitle());
+        holder.setPostText(model.getPostText());
+        final String postId = this.getSnapshots().getSnapshot(position).getKey();
+        holder.root.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialogCreater("Read",model);
+
+            }
+        });
+        currentUser = auth.getCurrentUser().getUid();
+        if(currentUser.equals(model.getUserId())){
+            holder.editBtn.setVisibility(View.VISIBLE);
+            holder.editBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+
+                    final AlertDialog alertDialog = dialogCreater("Edit",model);
+                    Button editBtn = alertDialog.findViewById(R.id.createBtn);
+                    Button cancelBtn = alertDialog.findViewById(R.id.cancelBtn);
+                    editBtn.setVisibility(View.VISIBLE);
+                    cancelBtn.setVisibility(View.VISIBLE);
+                    editBtn.setText("Edit");
+                    editBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Texts post = new Texts(txtTitle.getText().toString(),txtText.getText().toString(),currentUser);
+                            mFirebaseDatabase.child(postId).setValue(post).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    Toast.makeText(mContext,"Post Edited",Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            notifyDataSetChanged();
+                            alertDialog.dismiss();
+                        }
+                    });
+                    cancelBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            alertDialog.dismiss();
+                        }
+                    });
+                }
+            });
+            holder.deleteBtn.setVisibility(View.VISIBLE);
+            holder.deleteBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                    builder.setTitle("Delete Post");
+                    builder.setMessage("Are you sure delete this post?");
+                    builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+                    builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Toast.makeText(mContext,"Post Deleted",Toast.LENGTH_SHORT).show();
+                            mFirebaseDatabase.child(postId).removeValue();
+                        }
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
+            });
         }
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    public void stopListening() {
-        mSnapshots.removeChangeEventListener(this);
-        notifyDataSetChanged();
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    void cleanup(LifecycleOwner source) {
-        source.getLifecycle().removeObserver(this);
-    }
-
-    @Override
-    public void onChildChanged(ChangeEventType type,
-                               DataSnapshot snapshot,
-                               int newIndex,
-                               int oldIndex) {
-        Texts model = mSnapshots.get(newIndex);
-        onChildUpdate(model, type, snapshot, newIndex, oldIndex);
-    }
-
-    protected void onChildUpdate(Texts model, ChangeEventType type,
-                                 DataSnapshot snapshot,
-                                 int newIndex,
-                                 int oldIndex) {
-
-        switch (type) {
-            case ADDED:
-                addItem(snapshot.getKey(), model);
-                notifyItemInserted(newIndex);
-                break;
-            case CHANGED:
-                addItem(snapshot.getKey(), model, newIndex);
-                notifyItemChanged(newIndex);
-                break;
-            case REMOVED:
-                removeItem(newIndex);
-                notifyItemRemoved(newIndex);
-                break;
-            case MOVED:
-                moveItem(snapshot.getKey(), model, newIndex, oldIndex);
-                notifyItemMoved(oldIndex, newIndex);
-                break;
-            default:
-                throw new IllegalStateException("Incomplete case statement");
-        }
-    }
-
-    private void moveItem(String key, Texts t, int newIndex, int oldIndex) {
-        list.remove(oldIndex);
-        list.add(newIndex, t);
-        if (true) {
-            backupList.remove(oldIndex);
-            backupList.add(newIndex, t);
-        }
-    }
-
-    private void removeItem(int newIndex) {
-        list.remove(newIndex);
-        if (true)
-            backupList.remove(newIndex);
-    }
-
-    private void addItem(String key, Texts t, int newIndex) {
-        list.remove(newIndex);
-        list.add(newIndex, t);
-        if (true) {
-            backupList.remove(newIndex);
-            backupList.add(newIndex, t);
-        }
-    }
-
-    private void addItem(String id, Texts t) {
-        list.add(t);
-        if (true)
-            backupList.add(t);
-    }
-
-    @Override
-    public void onDataChanged() {
-    }
-
-    @Override
-    public void onError(DatabaseError error) {
-
-    }
-
-    @Override
-    public ObservableSnapshotArray<Texts> getSnapshots() {
-        return mSnapshots;
-    }
-    protected boolean filterCondition(Texts model, String filterPattern) {
-        return true;
     }
 
     public void filter(String searchText){
         searchText = searchText.toLowerCase();
-        threadList.clear();
+        mSnapshots = options.getSnapshots();
+        list.addAll(mSnapshots);
+        mSnapshots.clear();
         if(searchText.length() == 0){
-            threadList.addAll(arrayList);
+            mSnapshots.addAll(list);
         }else {
             try {
-            for(Texts posts : arrayList){
+            for(Texts posts : list){
                 if(posts.getPostTitle().toLowerCase().contains(searchText) || posts.getPostText().toLowerCase().contains(searchText)){
-                    threadList.add(posts);
+                    mSnapshots.add(posts);
+
                 }
             }}catch (Exception e){}
         }
         notifyDataSetChanged();
     }
-
-    @Override
-    public Filter getFilter() {
-        if (mCustomFilter == null) {
-            mCustomFilter = new CustomFilter();
+    public AlertDialog dialogCreater(String dialogTitle,Texts data){
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        LayoutInflater inflater = LayoutInflater.from(mContext);
+        final View dialog = inflater.inflate(R.layout.dialog_layout,null);
+        txtTitle = dialog.findViewById(R.id.editTxtTitle);
+        txtText = dialog.findViewById(R.id.editTxtText);
+        txtTitle.setText(data.getPostTitle());
+        txtText.setText(data.getPostText());
+        builder.setTitle(dialogTitle);
+        if(dialogTitle.equals("Read")){
+            txtTitle.setFocusable(false);
+            txtText.setFocusable(false);
         }
-        return mCustomFilter;
+        builder.setView(dialog);
+        return builder.show();
+
     }
 
 
-    public class CustomFilter extends Filter {
-
-        @Override
-        protected FilterResults performFiltering(CharSequence constraint) {
-            final FilterResults results = new FilterResults();
-            if (constraint.length() == 0) {
-                results.values = backupList;
-                results.count = backupList.size();
-            } else {
-                List<Texts> filteredList = new ArrayList<>();
-                final String filterPattern = constraint.toString().toLowerCase().trim();
-                for (Texts t : backupList) {
-                    if(filterCondition(t,filterPattern))
-                        filteredList.add(t);
-                }
-                results.values = filteredList;
-                results.count = filteredList.size();
-            }
-
-            return results;
-        }
-
-        @Override
-        protected void publishResults(CharSequence constraint, FilterResults results) {
-            list.clear();
-            list.addAll((Collection<? extends Texts>) results.values);
-            notifyDataSetChanged();
-        }
-    }
-}/*
+}
 class ViewHolder extends RecyclerView.ViewHolder {
     public LinearLayout root;
     public TextView postTitle;
@@ -277,4 +231,3 @@ class ViewHolder extends RecyclerView.ViewHolder {
     }
     public void setPostText(String text){ postText.setText(text);}
 }
-*/

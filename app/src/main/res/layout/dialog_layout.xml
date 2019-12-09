@@ -7,7 +7,7 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="18dp"
+        android:textSize="18sp"
         android:textStyle="bold"
         android:id="@+id/editTxtTitle"
         android:hint="Title"/>
@@ -15,6 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/editTxtText"
+        android:textSize="16sp"
         android:inputType="textMultiLine"
         android:hint="Text"/>
     <LinearLayout
