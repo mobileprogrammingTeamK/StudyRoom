@@ -2,11 +2,17 @@ package com.example.studyroom;
 
 
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.Exclude;
 
 public class Texts {
+
+    private String postId;
     private String postTitle;
     private String postText;
     private String userId;
+
+
+
 
     public Texts(){
 
@@ -17,6 +23,9 @@ public class Texts {
         this.postText = postText;
 
     }
+
+
+    public String getPostId(){return postId;}
     public String getPostTitle(){
         return postTitle;
     }
@@ -25,6 +34,8 @@ public class Texts {
     }
     public String getUserId(){return userId;}
 
+
+
     public void setThreadTitle(String threadTitle){
         this.postTitle = threadTitle;
     }
@@ -32,4 +43,7 @@ public class Texts {
         this.postText = threadText;
     }
     public void setUserId(String userId){ this.userId = userId; }
+    public void setPostId(String postId){this.postId = postId;}
+
+
 }
