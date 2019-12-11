@@ -1,5 +1,6 @@
 package com.example.studyroom;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -58,7 +59,10 @@ public class MainBoard extends AppCompatActivity {
     FirebaseRecyclerAdapter recyclerAdapter;
     String currentUser;
     PostAdapter adapter;
+    TextsAdapter textsAdapter;
     FirebaseRecyclerOptions<Texts> options;
+    public static int index;
+    public static boolean del= false;
 
 
     @Override
@@ -91,119 +95,32 @@ public class MainBoard extends AppCompatActivity {
                 return new Texts(snapshot.child("postTitle").getValue().toString(), snapshot.child("postText").getValue().toString(), snapshot.child("userId").getValue().toString());
             }
         }).build();
-        /*recyclerAdapter = new FirebaseRecyclerAdapter<Texts,ViewHolder>(options) {
-            @Override
-            protected void onBindViewHolder(@NonNull ViewHolder holder, final int position, @NonNull final Texts model) {
-                holder.setPostTitle(model.getPostTitle());
-                holder.setPostText(model.getPostText());
-                final String postId = this.getSnapshots().getSnapshot(position).getKey();
-
-                holder.root.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dialogCreater("Read",model);
-
-                    }
-                });
-                currentUser = auth.getCurrentUser().getUid();
-                if(currentUser.equals(model.getUserId())){
-                    holder.editBtn.setVisibility(View.VISIBLE);
-                    holder.editBtn.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-
-
-                            final AlertDialog alertDialog = dialogCreater("Edit",model);
-                            Button editBtn = alertDialog.findViewById(R.id.createBtn);
-                            Button cancelBtn = alertDialog.findViewById(R.id.cancelBtn);
-                            editBtn.setVisibility(View.VISIBLE);
-                            cancelBtn.setVisibility(View.VISIBLE);
-                            editBtn.setText("Edit");
-                            editBtn.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    Texts post = new Texts(txtTitle.getText().toString(),txtText.getText().toString(),currentUser);
-                                    mFirebaseDatabase.child(postId).setValue(post).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                        @Override
-                                        public void onSuccess(Void aVoid) {
-                                            Toast.makeText(MainBoard.this,"Post Edited",Toast.LENGTH_SHORT).show();
-                                        }
-                                    });
-                                    notifyDataSetChanged();
-                                    alertDialog.dismiss();
-                                }
-                            });
-                            cancelBtn.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    alertDialog.dismiss();
-                                }
-                            });
-                        }
-                    });
-                    holder.deleteBtn.setVisibility(View.VISIBLE);
-                    holder.deleteBtn.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(MainBoard.this);
-                            builder.setTitle("Delete Post");
-                            builder.setMessage("Are you sure delete this post?");
-                            builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            });
-                            builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    Toast.makeText(MainBoard.this,"Post Deleted",Toast.LENGTH_SHORT).show();
-                                    mFirebaseDatabase.child(postId).removeValue();
-                                }
-                            });
-                            AlertDialog dialog = builder.create();
-                            dialog.show();
-                        }
-                    });
-                }
-            }
-
-            @NonNull
-            @Override
-            public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-                View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.listview_activity,parent,false);
-                return new ViewHolder(view);
-
-            }
-        };*/
-        //adapter = new TextsAdapter(options);
 
         adapter = new PostAdapter(options);
+        recyclerView.setAdapter(adapter);
         adapter.setClickListener(new PostAdapter.ClickListener() {
             @Override
             public void onItemClick(View v, Texts texts, int position) {
-
+                dialogCreater("Read",texts);
             }
 
             @Override
-            public void editButtonClick(final String postId, final Texts texts, final int position) {
-                final AlertDialog alertDialog = dialogCreater("Edit",texts);
+            public void editButtonClick(final String postId, final Texts texts, int position) {
+                final AlertDialog alertDialog = dialogCreater("Edit", texts);
                 Button editBtn = alertDialog.findViewById(R.id.createBtn);
                 Button cancelBtn = alertDialog.findViewById(R.id.cancelBtn);
                 editBtn.setVisibility(View.VISIBLE);
                 cancelBtn.setVisibility(View.VISIBLE);
                 editBtn.setText("Edit");
-                Log.v("test",postId);
+                index = position;
                 editBtn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Texts post = new Texts(txtTitle.getText().toString(),txtText.getText().toString(),texts.getUserId());
-                        recyclerView.getRecycledViewPool().clear();
-                        adapter.notifyDataSetChanged();
+                        Texts post = new Texts(txtTitle.getText().toString(), txtText.getText().toString(), texts.getUserId());
                         mFirebaseDatabase.child(postId).setValue(post).addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
-                                Toast.makeText(MainBoard.this,"Post Edited",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainBoard.this, "Post Edited", Toast.LENGTH_SHORT).show();
                             }
                         });
 
@@ -219,12 +136,39 @@ public class MainBoard extends AppCompatActivity {
             }
 
             @Override
-            public void deleteButtonClick(String postId, Texts texts, int position) {
+            public void deleteButtonClick(final String postId, Texts texts, final int position) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainBoard.this);
+                builder.setTitle("Delete Post");
+                builder.setMessage("Are you sure delete this post?");
+                builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+                index = position;
+                del=true;
+                builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        mFirebaseDatabase.child(postId).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Toast.makeText(MainBoard.this, "Post Deleted", Toast.LENGTH_SHORT).show();
+                                adapter.notifyDataSetChanged();
 
+                            }
+                        });
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
         });
-        //recyclerView.setAdapter(recyclerAdapter);
-        recyclerView.setAdapter(adapter);
+
+        // textsAdapter= new TextsAdapter(options);
+        //recyclerView.setAdapter(textsAdapter);
+
     }
 
     public AlertDialog dialogCreater(String dialogTitle, Texts data) {
@@ -248,14 +192,14 @@ public class MainBoard extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        //recyclerAdapter.stopListening();
+        //textsAdapter.stopListening();
         adapter.stopListening();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        //recyclerAdapter.startListening();
+        //textsAdapter.startListening();
         adapter.startListening();
     }
 
@@ -303,8 +247,6 @@ public class MainBoard extends AppCompatActivity {
 
         SearchView searchView = (SearchView) search.getActionView();
         searchView.setQueryHint("Search");
-        final List<Texts> list = new ArrayList<>();
-        list.addAll(options.getSnapshots());
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -314,6 +256,7 @@ public class MainBoard extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
                 TextView emptyText = findViewById(R.id.emptyView);
+
                 adapter.getFilter().filter(newText);
                 if (adapter.getItemCount() != 0 || newText.length() == 0) {
                     recyclerView.setVisibility(View.VISIBLE);
@@ -322,6 +265,7 @@ public class MainBoard extends AppCompatActivity {
                     recyclerView.setVisibility(View.GONE);
                     emptyText.setVisibility(View.VISIBLE);
                 }
+                //textsAdapter = new TextsAdapter(options) {
 
                 return false;
             }

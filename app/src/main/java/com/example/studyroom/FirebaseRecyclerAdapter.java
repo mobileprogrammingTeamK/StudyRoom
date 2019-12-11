@@ -4,6 +4,7 @@ import android.util.Log;
 import android.widget.Filter;
 import android.widget.Filterable;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.OnLifecycleEvent;
@@ -19,6 +20,7 @@ import com.google.firebase.database.DatabaseError;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class is a generic way of backing a {@link RecyclerView} with a Firebase location. It
@@ -36,7 +38,8 @@ public abstract class FirebaseRecyclerAdapter<T, VH extends RecyclerView.ViewHol
         extends RecyclerView.Adapter<VH> implements FirebaseAdapter<T>, Filterable {
     private static final String TAG = "FirebaseRecyclerAdapter";
 
-    private final ObservableSnapshotArray<T> mSnapshots;
+    private ObservableSnapshotArray<T> mSnapshots;
+    private FirebaseRecyclerOptions<T> mOptions;
     private final List<T> list, backupList;
     private CustomFilter mCustomFilter;
     private boolean isFiltarable;
@@ -45,6 +48,7 @@ public abstract class FirebaseRecyclerAdapter<T, VH extends RecyclerView.ViewHol
      * {@link FirebaseRecyclerOptions} for configuration options.
      */
     public FirebaseRecyclerAdapter(FirebaseRecyclerOptions<T> options, boolean isFiltarable) {
+        mOptions = options;
         mSnapshots = options.getSnapshots();
         list = new ArrayList<>();
         backupList = new ArrayList<>();
@@ -77,8 +81,15 @@ public abstract class FirebaseRecyclerAdapter<T, VH extends RecyclerView.ViewHol
                                DataSnapshot snapshot,
                                int newIndex,
                                int oldIndex) {
-        T model = mSnapshots.get(newIndex);
-        onChildUpdate(model, type, snapshot, newIndex, oldIndex);
+       /* if(!MainBoard.del) {
+            T model = mSnapshots.get(newIndex);
+            onChildUpdate(model, type, snapshot, newIndex, oldIndex);
+        }else {
+            T model = mSnapshots.get(newIndex-1);
+            onChildUpdate(model, type, snapshot, newIndex, oldIndex);
+            MainBoard.del = false;
+        }*/
+
     }
 
     protected void onChildUpdate(T model, ChangeEventType type,
@@ -93,14 +104,17 @@ public abstract class FirebaseRecyclerAdapter<T, VH extends RecyclerView.ViewHol
             case CHANGED:
                 addItem(snapshot.getKey(), model, newIndex);
                 notifyItemChanged(newIndex);
+                notifyDataSetChanged();
                 break;
             case REMOVED:
                 removeItem(newIndex);
                 notifyItemRemoved(newIndex);
+                notifyDataSetChanged();
                 break;
             case MOVED:
                 moveItem(snapshot.getKey(), model, newIndex, oldIndex);
                 notifyItemMoved(oldIndex, newIndex);
+                notifyDataSetChanged();
                 break;
             default:
                 throw new IllegalStateException("Incomplete case statement");
@@ -108,26 +122,42 @@ public abstract class FirebaseRecyclerAdapter<T, VH extends RecyclerView.ViewHol
     }
 
     private void moveItem(String key, T t, int newIndex, int oldIndex) {
-        list.remove(oldIndex);
-        list.add(newIndex, t);
-        if (isFiltarable) {
-            backupList.remove(oldIndex);
-            backupList.add(newIndex, t);
-        }
+            list.remove(oldIndex);
+            list.add(newIndex, t);
+            if (isFiltarable) {
+                backupList.remove(oldIndex);
+                backupList.add(newIndex, t);
+            }
+
     }
 
     private void removeItem(int newIndex) {
-        list.remove(newIndex);
-        if (isFiltarable)
-            backupList.remove(newIndex);
+       if(newIndex >= list.size() ) {
+            list.remove(MainBoard.index);
+            if (isFiltarable)
+                backupList.remove(newIndex);
+        }else {
+           list.remove(newIndex);
+           if (isFiltarable)
+               backupList.remove(newIndex);
+       }
     }
 
     private void addItem(String key, T t, int newIndex) {
-        list.remove(newIndex);
-        list.add(newIndex, t);
-        if (isFiltarable) {
-            backupList.remove(newIndex);
-            backupList.add(newIndex, t);
+        if(newIndex < list.size()) {
+            list.remove(newIndex);
+            list.add(newIndex, t);
+            if (isFiltarable) {
+                backupList.remove(newIndex);
+                backupList.add(newIndex, t);
+            }
+        }else {
+            list.remove(MainBoard.index);
+            list.add(MainBoard.index,t);
+            if (isFiltarable) {
+                backupList.remove(newIndex);
+                backupList.add(newIndex, t);
+            }
         }
     }
 

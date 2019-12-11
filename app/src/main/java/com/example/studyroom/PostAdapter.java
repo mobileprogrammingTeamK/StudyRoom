@@ -36,7 +36,7 @@ public class PostAdapter extends FirebaseRecyclerAdapter<Texts, PostAdapter.Post
     private ClickListener mClickListener;
 
     public interface ClickListener {
-        public void onItemClick(View v,Texts texts, int position);
+        void onItemClick(View v,Texts texts, int position);
         void editButtonClick(String postId, Texts texts, int position);
         void deleteButtonClick(String postId, Texts texts, int position);
     }
@@ -56,15 +56,14 @@ public class PostAdapter extends FirebaseRecyclerAdapter<Texts, PostAdapter.Post
     }
 
     @Override
-    protected void onBindViewHolder(final PostViewHolder holder, int position, final Texts model) {
+    protected void onBindViewHolder(final PostViewHolder holder, final int position, final Texts model) {
         holder.setPostTitle(model.getPostTitle());
         holder.setPostText(model.getPostText());
         //final String postId = this.getSnapshots().getSnapshot(position).getKey();
         holder.root.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dialogCreater("Read",model);
-
+                mClickListener.onItemClick(v,model,position);
             }
         });
         currentUser = auth.getCurrentUser().getUid();
@@ -163,7 +162,6 @@ public class PostAdapter extends FirebaseRecyclerAdapter<Texts, PostAdapter.Post
                 @Override
                 public void onClick(View v) {
                     mClickListener.editButtonClick(model.getPostId(),model,getAdapterPosition());
-                    notifyDataSetChanged();
                 }
             });
             deleteBtn.setOnClickListener(new View.OnClickListener() {
@@ -172,7 +170,6 @@ public class PostAdapter extends FirebaseRecyclerAdapter<Texts, PostAdapter.Post
                     int pos = getAdapterPosition();
                     Texts model = getItem(pos);
                     mClickListener.deleteButtonClick(model.getPostId(),model,pos);
-                    notifyDataSetChanged();
                 }
             });
         }
