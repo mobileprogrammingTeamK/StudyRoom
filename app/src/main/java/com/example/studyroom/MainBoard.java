@@ -203,6 +203,11 @@ public class MainBoard extends AppCompatActivity {
         adapter.startListening();
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
 
     public void onClick(View v) {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainBoard.this);
@@ -255,18 +260,17 @@ public class MainBoard extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                TextView emptyText = findViewById(R.id.emptyView);
+                TextView noresultText = findViewById(R.id.emptyView);
 
                 adapter.getFilter().filter(newText);
-                if (adapter.getItemCount() != 0 || newText.length() == 0) {
+                /*
+                if (adapter.getItemCount() > 0 || newText.length() == 0) {
                     recyclerView.setVisibility(View.VISIBLE);
-                    emptyText.setVisibility(View.GONE);
+                    noresultText.setVisibility(View.GONE);
                 } else {
                     recyclerView.setVisibility(View.GONE);
-                    emptyText.setVisibility(View.VISIBLE);
-                }
-                //textsAdapter = new TextsAdapter(options) {
-
+                    noresultText.setVisibility(View.VISIBLE);
+                }*/
                 return false;
             }
         });

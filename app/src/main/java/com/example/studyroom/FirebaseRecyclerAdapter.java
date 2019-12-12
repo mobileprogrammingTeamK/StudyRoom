@@ -81,15 +81,15 @@ public abstract class FirebaseRecyclerAdapter<T, VH extends RecyclerView.ViewHol
                                DataSnapshot snapshot,
                                int newIndex,
                                int oldIndex) {
-       /* if(!MainBoard.del) {
-            T model = mSnapshots.get(newIndex);
-            onChildUpdate(model, type, snapshot, newIndex, oldIndex);
-        }else {
-            T model = mSnapshots.get(newIndex-1);
-            onChildUpdate(model, type, snapshot, newIndex, oldIndex);
-            MainBoard.del = false;
-        }*/
+        T model;
+        if(!MainBoard.del) {
+            model = mSnapshots.get(newIndex);
 
+        }else {
+            model = mSnapshots.get(newIndex-1);
+            MainBoard.del = false;
+        }
+        onChildUpdate(model, type, snapshot, newIndex, oldIndex);
     }
 
     protected void onChildUpdate(T model, ChangeEventType type,
