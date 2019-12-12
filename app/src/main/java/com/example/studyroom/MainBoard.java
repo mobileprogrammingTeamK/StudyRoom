@@ -56,7 +56,6 @@ public class MainBoard extends AppCompatActivity {
     DatabaseReference mFirebaseDatabase = FirebaseDatabase.getInstance().getReference("posts");
     RecyclerView recyclerView;
     LinearLayoutManager linearLayoutManager;
-    FirebaseRecyclerAdapter recyclerAdapter;
     String currentUser;
     PostAdapter adapter;
     FirebaseRecyclerOptions<Texts> options;
