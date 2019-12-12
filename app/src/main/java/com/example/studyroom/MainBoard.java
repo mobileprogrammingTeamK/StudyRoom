@@ -59,7 +59,6 @@ public class MainBoard extends AppCompatActivity {
     FirebaseRecyclerAdapter recyclerAdapter;
     String currentUser;
     PostAdapter adapter;
-    TextsAdapter textsAdapter;
     FirebaseRecyclerOptions<Texts> options;
     public static int index;
     public static boolean del= false;
